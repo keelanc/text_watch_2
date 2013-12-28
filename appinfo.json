@@ -1,0 +1,26 @@
+{
+  "uuid": "ac0d6642-55b8-4f60-8166-bdae3b91c748",
+  "shortName": "Text Watch 2",
+  "longName": "Text Watch 2",
+  "companyName": "keelanchufor.com",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+      "city": 2,
+      "temperature": 1,
+      "icon": 0
+  },
+  "resources": {
+      "media": [
+                {
+                "menuIcon": true,
+                "type": "png",
+                "name": "IMAGE_MENU_ICON",
+                "file": "images/menu_icon_text_watch_2.png"
+                }
+                ]
+  }
+}
