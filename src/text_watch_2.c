@@ -210,6 +210,10 @@ static void timer_callback_1(void *context) {
     strcpy(current_tens, center_str);
     strcpy(current_ones, temp_str);
     
+    // use '&' only if sync_error_callback hasn't been called
+    // explicitly setting center_str in sync_error_callback isn't enough.
+    strcpy(current_tens, strcmp(current_ones, "data ")==0 ? "weathr" : "&");
+    
     animation_out_in();
     
     timer_handle = app_timer_register(WAIT_TIME + STAGGER_STR*2, timer_callback_2, NULL);
@@ -237,9 +241,9 @@ static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
-    strcpy(weather_str, "no");
+    strcpy(weather_str, "no    ");
     strcpy(center_str, "weathr");
-    strcpy(temp_str, "data");
+    strcpy(temp_str, "data ");
 }
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
@@ -253,12 +257,6 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
             
         case WEATHER_TEMPERATURE_KEY:
             strcpy(temp_str, new_tuple->value->cstring);
-            if (strcmp(temp_str, "data")) { // use '&' only if sync_error_callback hasn't been called
-                strcpy(center_str, "&"); // explicitly setting center_str in sync_error_callback isn't enough.
-            }
-            else {
-                strcpy(center_str, "weathr");
-            }
             break;
             
         case WEATHER_CITY_KEY:
