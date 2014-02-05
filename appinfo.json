@@ -4,13 +4,16 @@
   "longName": "Text Watch 2",
   "companyName": "keelanchufor.com",
   "versionCode": 1,
-  "versionLabel": "1.0.2",
+  "versionLabel": "1.1.0",
   "watchapp": {
     "watchface": true
   },
+  "capabilities": [ "configurable" ],
   "appKeys": {
-      "city": 2,
-      "temperature": 1,
+      "updateConfig": 4,
+      "city": 3,
+      "temperatureC": 2,
+      "temperatureF": 1,
       "icon": 0
   },
   "resources": {

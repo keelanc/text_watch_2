@@ -23,22 +23,23 @@ function fetchWeather(latitude, longitude) {
       if(req.status == 200) {
         console.log(req.responseText);
         response = JSON.parse(req.responseText);
-        var temperature, icon, city;
+        var temperatureF, temperatureC, icon, city;
         if (response && response.list && response.list.length > 0) {
           var weatherResult = response.list[0];
-          //temperature = Math.round(weatherResult.main.temp - 273.15);
-          temperature = Math.round(1.8 * (weatherResult.main.temp - 273.15) + 32);
+          temperatureC = Math.round(weatherResult.main.temp - 273.15);
+          temperatureF = Math.round(1.8 * (weatherResult.main.temp - 273.15) + 32);
           //icon = iconFromWeatherId(weatherResult.weather[0].id);
           icon = weatherResult.weather[0].main;
           city = weatherResult.name;
-          console.log(temperature);
+          console.log(temperatureF);
+          console.log(temperatureC);
           console.log(icon);
           console.log(city);
           Pebble.sendAppMessage({
             "icon":icon,
-            //"temperature":temperature + "\u00B0C",
-            "temperature":temperature + "\u00B0F",
-            "city":city});
+            "temperatureC":"" + temperatureC,
+            "temperatureF":"" + temperatureF
+            });
         }
 
       } else {
@@ -58,11 +59,13 @@ function locationError(err) {
   console.warn('location error (' + err.code + '): ' + err.message);
   Pebble.sendAppMessage({
     "city":"Loc Unavailable",
-    "temperature":"N/A"
+    "temperatureC":"N/A",
+    "temperatureF":"N/A"
   });
 }
 
-var locationOptions = { "timeout": 15000, "maximumAge": 60000 }; 
+var initialized = false;
+var locationOptions = { "timeout": 150000, "maximumAge": 600000 };
 
 
 Pebble.addEventListener("ready",
@@ -70,21 +73,35 @@ Pebble.addEventListener("ready",
                           console.log("connect!" + e.ready);
                           locationWatcher = window.navigator.geolocation.watchPosition(locationSuccess, locationError, locationOptions);
                           console.log(e.type);
+                          initialized = true;
                         });
 
 Pebble.addEventListener("appmessage",
                         function(e) {
                           window.navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
                           console.log(e.type);
-                          console.log(e.payload.temperature);
+                          console.log(e.payload.temperatureF);
+                          console.log(e.payload.temperatureC);
                           console.log("message!");
                         });
 
+Pebble.addEventListener("showConfiguration",
+                        function() {
+                            console.log("showing configuration");
+                            Pebble.openURL("http://keelanc.github.io/pebble/text_watch_2_cfg_1.html");
+                        });
+
 Pebble.addEventListener("webviewclosed",
-                                     function(e) {
-                                     console.log("webview closed");
-                                     console.log(e.type);
-                                     console.log(e.response);
-                                     });
+                        function(e) {
+                             console.log("configuration closed");
+                             //console.log(e.type);
+                             //console.log(e.response);
+                             //var config = e.response;
+                             var config = JSON.parse(e.response);
+                             console.log(config);
+                             Pebble.sendAppMessage({
+                                "updateConfig":config
+                             })
+                         });
 
 

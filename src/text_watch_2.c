@@ -47,6 +47,8 @@ static char date_str[] = "xx";
 static char weather_str[] = "eleven";
 static char center_str[] = "thirteen";
 static char temp_str[] = "clock";
+static char temp_f_str[] = "clock";
+static char temp_c_str[] = "clock";
 static char city_str[] = "1234";
 #define STAGGER_STR 100
 #define STAGGER_IN 500
@@ -74,9 +76,22 @@ static AppSync sync;
 static uint8_t sync_buffer[64];
 enum WeatherKey {
     WEATHER_ICON_KEY = 0x0,         // TUPLE_CSTRING
-    WEATHER_TEMPERATURE_KEY = 0x1,  // TUPLE_CSTRING
-    WEATHER_CITY_KEY = 0x2,         // TUPLE_CSTRING
+    WEATHER_TEMPERATURE_F_KEY = 0x1,// TUPLE_CSTRING
+    WEATHER_TEMPERATURE_C_KEY = 0x2,// TUPLE_CSTRING
+    WEATHER_CITY_KEY = 0x3,         // TUPLE_CSTRING
+    TEMP_FORMAT_KEY = 0x4,          // TUPLE_INT
 };
+static int config = 2;
+#define CONFIG_TEMP_F 2
+
+static void temp_format(void) {
+    if(config & CONFIG_TEMP_F) {    // if set to Fahrenheit
+        strcpy(temp_str, temp_f_str);
+    }
+    else {
+        strcpy(temp_str, temp_c_str);
+    }
+}
 
 static void more_info(struct tm *tick_time) {
     strftime(day_str, sizeof(day_str), "%a", tick_time);
@@ -206,6 +221,7 @@ static void timer_callback_2(void *context) {
 }
 
 static void timer_callback_1(void *context) {
+    temp_format();
     strcpy(current_hour, weather_str);
     strcpy(current_tens, center_str);
     strcpy(current_ones, temp_str);
@@ -255,15 +271,25 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
             weather_str[0] = tolower((unsigned char)weather_str[0]);
             break;
             
-        case WEATHER_TEMPERATURE_KEY:
-            strcpy(temp_str, new_tuple->value->cstring);
+        case WEATHER_TEMPERATURE_F_KEY:
+            strcpy(temp_f_str, new_tuple->value->cstring);
+            strcat(temp_f_str, "\u00B0F");
             break;
-            
+        
+        case WEATHER_TEMPERATURE_C_KEY:
+            strcpy(temp_c_str, new_tuple->value->cstring);
+            strcat(temp_c_str, "\u00B0C");
+            break;
+        
         case WEATHER_CITY_KEY:
             strncpy(city_str, new_tuple->value->cstring, 4);
             //strcpy(city_str, new_tuple->value->cstring);
             // make all lowercase
             city_str[0] = tolower((unsigned char)city_str[0]);
+            break;
+        
+        case TEMP_FORMAT_KEY:
+            config = (int)(new_tuple->value->uint8);
             break;
     }
 }
@@ -292,8 +318,10 @@ static void window_load(Window *window) {
     // prepare the initial values of your data
     Tuplet initial_values[] = {
         TupletCString(WEATHER_ICON_KEY, "no    "),
-        TupletCString(WEATHER_TEMPERATURE_KEY, "data "),
+        TupletCString(WEATHER_TEMPERATURE_F_KEY, "data "),
+        TupletCString(WEATHER_TEMPERATURE_C_KEY, "data "),
         TupletCString(WEATHER_CITY_KEY, "1234"),
+        TupletInteger(TEMP_FORMAT_KEY, (uint8_t) 2),
     };
     // initialize the syncronization
     app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
