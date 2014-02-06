@@ -81,8 +81,10 @@ enum WeatherKey {
     WEATHER_CITY_KEY = 0x3,         // TUPLE_CSTRING
     TEMP_FORMAT_KEY = 0x4,          // TUPLE_INT
 };
-static int config = 2;
 #define CONFIG_TEMP_F 2
+#define CONFIG_TEMP_KEY 0
+#define CONFIG_TEMP_DEFAULT 2
+static int config/* = CONFIG_TEMP_DEFAULT*/;
 
 static void temp_format(void) {
     if(config & CONFIG_TEMP_F) {    // if set to Fahrenheit
@@ -289,7 +291,9 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
             break;
         
         case TEMP_FORMAT_KEY:
-            config = (int)(new_tuple->value->uint8);
+            //config = (int)(new_tuple->value->uint8);
+            persist_write_int(CONFIG_TEMP_KEY, new_tuple->value->uint8);
+            config = CONFIG_TEMP_KEY;
             break;
     }
 }
@@ -353,6 +357,9 @@ static void init(void) {
     
     tick_timer_service_subscribe(MINUTE_UNIT, &handle_tick);
     accel_tap_service_subscribe(&accel_tap_handler);
+    
+    // Get the count from persistent storage for use if it exists, otherwise use the default
+    config = persist_exists(CONFIG_TEMP_KEY) ? persist_read_int(CONFIG_TEMP_KEY) : CONFIG_TEMP_DEFAULT;
 }
 
 static void deinit(void) {
@@ -361,6 +368,7 @@ static void deinit(void) {
     destroy_property_animation(&ones_anim);
     window_destroy(window);
     accel_tap_service_unsubscribe();
+    //persist_write_int(CONFIG_TEMP_KEY, config);
 }
 
 int main(void) {
